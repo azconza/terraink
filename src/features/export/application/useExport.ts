@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { usePosterContext } from "@/features/poster/ui/PosterContext";
 import { captureMapAsCanvas } from "@/features/export/infrastructure/mapExporter";
 import { compositeExport } from "@/features/poster/infrastructure/renderer";
@@ -18,6 +18,42 @@ import {
   DEFAULT_POSTER_HEIGHT_CM,
 } from "@/core/config";
 
+const EXPORT_COUNT_STORAGE_KEY = "terraink.poster.count";
+
+export interface SupportPromptState {
+  posterNumber: number;
+  isFirst: boolean;
+}
+
+function readPosterExportCount(): number {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return 0;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(EXPORT_COUNT_STORAGE_KEY);
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return 0;
+    }
+    return Math.floor(parsed);
+  } catch {
+    return 0;
+  }
+}
+
+function writePosterExportCount(nextCount: number): void {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(EXPORT_COUNT_STORAGE_KEY, String(nextCount));
+  } catch {
+    // Ignore storage write failures (quota/private mode).
+  }
+}
+
 /**
  * Provides handlers for exporting the live poster preview as PNG or PDF.
  *
@@ -30,8 +66,24 @@ import {
  */
 export function useExport() {
   const { state, dispatch, effectiveTheme, mapRef } = usePosterContext();
+  const [supportPrompt, setSupportPrompt] = useState<SupportPromptState | null>(
+    null,
+  );
   const { form } = state;
   const hasVisibleMarkers = form.showMarkers && state.markers.length > 0;
+
+  const registerSuccessfulExport = useCallback(() => {
+    const nextCount = readPosterExportCount() + 1;
+    writePosterExportCount(nextCount);
+
+    if (nextCount === 1 || nextCount % 5 === 0) {
+      setSupportPrompt({ posterNumber: nextCount, isFirst: nextCount === 1 });
+    }
+  }, []);
+
+  const dismissSupportPrompt = useCallback(() => {
+    setSupportPrompt(null);
+  }, []);
 
   const exportPoster = useCallback(
     async (format: "png" | "pdf" | "svg") => {
@@ -84,6 +136,7 @@ export function useExport() {
             "svg",
           );
           triggerDownloadBlob(svgBlob, svgFilename);
+          registerSuccessfulExport();
           dispatch({ type: "FINISH_EXPORT" });
           return;
         }
@@ -137,6 +190,7 @@ export function useExport() {
           triggerDownloadBlob(pngBlob, filename);
         }
 
+        registerSuccessfulExport();
         dispatch({ type: "FINISH_EXPORT" });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Export failed.";
@@ -149,6 +203,7 @@ export function useExport() {
       effectiveTheme,
       dispatch,
       hasVisibleMarkers,
+      registerSuccessfulExport,
       state.markers,
       state.customMarkerIcons,
     ],
@@ -169,5 +224,11 @@ export function useExport() {
     [exportPoster],
   );
 
-  return { handleDownloadPng, handleDownloadPdf, handleDownloadSvg };
+  return {
+    handleDownloadPng,
+    handleDownloadPdf,
+    handleDownloadSvg,
+    supportPrompt,
+    dismissSupportPrompt,
+  };
 }
