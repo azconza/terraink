@@ -70,7 +70,7 @@ bun run dev
 
 ## Environment
 
-Copy `.env.example` to `.env` and fill in your values. See [CONTRIBUTING.md](./CONTRIBUTING.md) for a description of each variable.
+Check [`.env.example`](./.env.example) for available variables. They are optional for most local work and should not be set during testing unless a specific case requires them.
 
 ## Build
 
@@ -78,7 +78,7 @@ Copy `.env.example` to `.env` and fill in your values. See [CONTRIBUTING.md](./C
 bun run build
 ```
 
-## Deploy with Docker
+## Deploy with Docker (Self-Hosting)
 
 ### 1) Build and run with Docker Compose
 
@@ -120,8 +120,26 @@ docker run -d --name terraink -p 7200:80 --restart unless-stopped terraink:lates
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions, environment variables, branch strategy, and contribution guidelines.
+> The contribution guidelines are meant to keep TerraInk easy to extend, review, and maintain over time. They are here to support a durable architecture, not to add unnecessary friction.
+
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a PR.
+
+- Branch from `dev` and target `dev` only. Do not open PRs against `main`.
+- Fill out the pull request template completely when you open a PR.
+- Keep contributions clean, modular, and aligned with the existing architecture.
+- Avoid hard-coded values when constants, configuration, or reusable abstractions are more appropriate.
+- AI-assisted coding is allowed, but submissions must be reviewed, refined, and intentionally engineered before review.
 
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=yousifamanuel/terraink&type=Date)](https://star-history.com/#yousifamanuel/terraink&Date)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Trademark
+
+The **Terraink™** name, logo, and branding assets are trademarks of the project owner.</br>
+The MIT license grants you the right to use the code, but it does **not** grant any rights to use the project's name or branding for your own commercial purposes or hosted services.</br>
+See [TRADEMARK.md](./TRADEMARK.md) for details.
